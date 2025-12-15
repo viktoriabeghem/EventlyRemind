@@ -6,3 +6,8 @@ urlpatterns = [
     path("api/events/create/", create_event, name="create_event"),
     path("api/events/<int:event_id>/", event_detail, name="event_detail"),
 ]
+from . import views
+
+urlpatterns = [
+    path("events/", views.event_list, name="event_list"),
+]
