@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 *.pyc
 __pycache__/
 db.sqlite3
 .venv/
+=======
+# Ігнорувати скомпільовані Python-файли __pycache__/ *.pyc # Ігнорувати структуру, згенеровану вручну structure.txt
+
+>>>>>>> 9d1f85c (Локальні зміни в .gitignore)
