@@ -2,10 +2,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotFound
 import json
 from .models import Event
-from .serializers import EventSerializer   # ✅ додаємо імпорт серіалізатора
+from .serializers import EventSerializer
 
-# 1. Список усіх подій
-def event_list(request):
+# 1. Список усіх подій (JSON)
+def api_event_list(request):
     events = Event.objects.all()
     serializer = EventSerializer(events, many=True)
     return JsonResponse(serializer.data, safe=False)
@@ -16,7 +16,6 @@ def create_event(request):
     if request.method != "POST":
         return HttpResponseBadRequest("Only POST allowed")
 
-    # Якщо прийшов JSON
     if request.content_type == "application/json":
         try:
             data = json.loads(request.body)
@@ -30,7 +29,6 @@ def create_event(request):
         else:
             return JsonResponse(serializer.errors, status=400)
 
-    # Якщо прийшов form-data (наприклад, з фото)
     elif request.content_type.startswith("multipart/form-data"):
         user_id = request.POST.get("user_id")
         text = request.POST.get("text", "")
