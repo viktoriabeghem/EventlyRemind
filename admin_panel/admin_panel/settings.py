@@ -92,6 +92,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'reminders', 'static'),
+    os.path.join(BASE_DIR, 'admin_panel', 'static'),
 ]
 
 # Медійні файли (фото подій)
