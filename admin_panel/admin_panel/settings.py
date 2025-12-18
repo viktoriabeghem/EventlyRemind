@@ -1,15 +1,15 @@
 from pathlib import Path
-import os  # Для роботи з шляхами
+import os
 
-# Шлях до кореня проєкту
+# 📁 Шлях до кореня проєкту
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Безпека
+# 🔐 Безпека
 SECRET_KEY = 'django-insecure-l9fe6!w%ib$l5+mp_*wg&5p(y)wu!=-^w*@jsajdetfy+a6kmi'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
-# Додатки
+# 📦 Додатки
 INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
@@ -22,7 +22,7 @@ INSTALLED_APPS = [
     'reminders',
 ]
 
-# Middleware
+# 🧱 Middleware
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -36,14 +36,14 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-# URL конфігурація
+# 🌐 URL конфігурація
 ROOT_URLCONF = 'admin_panel.urls'
 
-# Шаблони
+# 🧩 Шаблони
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # Якщо шаблони в reminders/templates — залишаємо порожнім
+        'DIRS': [os.path.join(BASE_DIR, 'reminders', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -57,7 +57,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'admin_panel.wsgi.application'
 
-# База даних
+# 🗄️ База даних
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -65,40 +65,30 @@ DATABASES = {
     }
 }
 
-# Валідація паролів
+# 🔐 Валідація паролів
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Локалізація
+# 🌍 Локалізація
 LANGUAGE_CODE = 'uk'
 TIME_ZONE = 'Europe/Kyiv'
 USE_I18N = True
 USE_TZ = True
 
-# Статичні файли (CSS, JS)
+# 🎨 Статичні файли (CSS, JS)
 STATIC_URL = '/static/'
-
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'reminders', 'static'),
     os.path.join(BASE_DIR, 'admin_panel', 'static'),
 ]
 
-# Медійні файли (фото подій)
+# 🖼️ Медійні файли (фото подій)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Тип первинного ключа за замовчуванням
+# 🧾 Тип первинного ключа за замовчуванням
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
