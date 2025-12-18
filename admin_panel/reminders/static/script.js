@@ -1,7 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const API_BASE = "http://127.0.0.1:8000"; // змінити порт, якщо інший
   const modal = document.getElementById("modal");
   const successModal = document.getElementById("successModal");
   const calendarEl = document.getElementById("events-calendar");
+
   const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
     locale: "uk",
@@ -15,8 +17,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   calendar.render();
 
-  // Завантажити події з API
-  fetch("http://127.0.0.1:8001/api/events/")
+  // Завантажити події
+  fetch(`${API_BASE}/api/events/`, {
+    headers: { Accept: "application/json" }
+  })
     .then(res => res.json())
     .then(data => {
       data.forEach((event, index) => {
@@ -41,11 +45,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = e.target;
     const formData = new FormData(form);
 
-    // Обробка чекбоксів
-    formData.set("is_sent", form.is_sent.checked);
-    formData.set("added_to_calendar", form.added_to_calendar.checked);
+    // Валідація
+    if (!form.text.value.trim()) {
+      alert("Введіть назву події");
+      return;
+    }
 
-    fetch("http://127.0.0.1:8001/api/events/create/", {
+    // Обробка чекбоксів
+    formData.set("is_sent", form.is_sent?.checked || false);
+    formData.set("added_to_calendar", form.added_to_calendar?.checked || false);
+
+    fetch(`${API_BASE}/api/events/create/`, {
       method: "POST",
       body: formData
     })
@@ -97,11 +107,12 @@ document.addEventListener("DOMContentLoaded", () => {
     calendar.setOption("locale", e.target.value);
   });
 
-  // Telegram заглушка
+  // Telegram-заглушка
   document.getElementById("btn-telegram")?.addEventListener("click", () => {
-    alert("Імпорт із Telegram не реалізовано");
+    alert("Імпорт із Telegram ще не реалізовано");
   });
 
+  // Додати подію в таблицю
   function addToTable(event, index = null) {
     const tbody = document.getElementById("eventTableBody");
     const row = document.createElement("tr");
@@ -120,9 +131,10 @@ document.addEventListener("DOMContentLoaded", () => {
     tbody.appendChild(row);
   }
 
+  // Видалити подію
   window.deleteEvent = function (id, btn) {
     if (!confirm("Видалити подію?")) return;
-    fetch(`http://127.0.0.1:8001/api/events/${id}/delete/`, {
+    fetch(`${API_BASE}/api/events/${id}/delete/`, {
       method: "DELETE"
     })
       .then(res => {
@@ -135,8 +147,9 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   };
 
+  // Позначити як додану в календар
   window.markCalendar = function (id, btn) {
-    fetch(`http://127.0.0.1:8001/api/events/${id}/`, {
+    fetch(`${API_BASE}/api/events/${id}/`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ added_to_calendar: true })
@@ -152,6 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   };
 
+  // Показати повідомлення про успіх
   function showSuccess() {
     successModal.classList.remove("hidden");
     successModal.classList.add("flex");
@@ -161,9 +175,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 2000);
   }
 
+  // Активна вкладка
   function setActiveTab(id) {
     document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active-tab"));
     document.getElementById(id)?.classList.add("active-tab");
   }
 });
+
 

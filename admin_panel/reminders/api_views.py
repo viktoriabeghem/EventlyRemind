@@ -1,71 +1,49 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotFound
-import json
+from django.views.decorators.http import require_http_methods
 from .models import Event
+from .forms import EventForm
 from .serializers import EventSerializer
+import json
 
-# 1. Список усіх подій (JSON)
+# 1. Список усіх подій
+@require_http_methods(["GET"])
 def api_event_list(request):
-    events = Event.objects.all()
+    events = Event.objects.all().order_by('-date', '-time')
     serializer = EventSerializer(events, many=True)
     return JsonResponse(serializer.data, safe=False)
 
-# 2. Створення нової події (JSON або form-data)
+# 2. Створення події (JSON або form-data)
 @csrf_exempt
+@require_http_methods(["POST"])
 def create_event(request):
-    if request.method != "POST":
-        return HttpResponseBadRequest("Only POST allowed")
-
     if request.content_type == "application/json":
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
             return HttpResponseBadRequest("Invalid JSON")
+        form = EventForm(data)
+    else:
+        form = EventForm(request.POST, request.FILES)
 
-        serializer = EventSerializer(data=data)
-        if serializer.is_valid():
-            event = serializer.save()
-            return JsonResponse({"id": event.id}, status=201)
-        else:
-            return JsonResponse(serializer.errors, status=400)
-
-    elif request.content_type.startswith("multipart/form-data"):
-        user_id = request.POST.get("user_id")
-        text = request.POST.get("text", "")
-        date = request.POST.get("date")
-        time = request.POST.get("time")
-        location = request.POST.get("location", "")
-        link = request.POST.get("link", "")
-        is_sent = request.POST.get("is_sent") == "true"
-        added_to_calendar = request.POST.get("added_to_calendar") == "true"
-        photo = request.FILES.get("photo")
-
-        try:
-            user_id = int(user_id)
-        except (TypeError, ValueError):
-            return JsonResponse({"user_id": ["A valid integer is required."]}, status=400)
-
-        event = Event.objects.create(
-            user_id=user_id,
-            text=text,
-            date=date,
-            time=time,
-            location=location,
-            link=link,
-            is_sent=is_sent,
-            added_to_calendar=added_to_calendar,
-            photo=photo,
-        )
-
+    if form.is_valid():
+        event = form.save()
         return JsonResponse({
             "id": event.id,
+            "text": event.text,
+            "date": str(event.date),
+            "time": str(event.time),
+            "location": event.location,
+            "link": event.link,
+            "is_sent": event.is_sent,
+            "added_to_calendar": event.added_to_calendar,
             "photo": event.photo.url if event.photo else None
         }, status=201)
-
     else:
-        return HttpResponseBadRequest("Unsupported content type")
+        return JsonResponse(form.errors, status=400)
 
-# 3. Перегляд конкретної події за ID
+# 3. Деталі події
+@require_http_methods(["GET"])
 def event_detail(request, event_id):
     try:
         event = Event.objects.get(id=event_id)
@@ -75,12 +53,10 @@ def event_detail(request, event_id):
     serializer = EventSerializer(event)
     return JsonResponse(serializer.data)
 
-# 4. Оновлення події
+# 4. Оновлення події (PATCH)
 @csrf_exempt
+@require_http_methods(["PATCH"])
 def update_event(request, event_id):
-    if request.method != "PUT":
-        return HttpResponseBadRequest("Only PUT allowed")
-
     try:
         event = Event.objects.get(id=event_id)
     except Event.DoesNotExist:
@@ -91,20 +67,20 @@ def update_event(request, event_id):
     except json.JSONDecodeError:
         return HttpResponseBadRequest("Invalid JSON")
 
-    serializer = EventSerializer(event, data=data, partial=True)
-    if serializer.is_valid():
-        serializer.save()
+    form = EventForm(data, instance=event, partial=True)
+    if form.is_valid():
+        form.save()
         return JsonResponse({"status": "updated", "id": event.id})
     else:
-        return JsonResponse(serializer.errors, status=400)
+        return JsonResponse(form.errors, status=400)
 
 # 5. Видалення події
 @csrf_exempt
+@require_http_methods(["DELETE"])
 def delete_event(request, event_id):
-    if request.method != "DELETE":
-        return HttpResponseBadRequest("Only DELETE allowed")
-
-    deleted, _ = Event.objects.filter(id=event_id).delete()
-    if deleted == 0:
+    try:
+        event = Event.objects.get(id=event_id)
+        event.delete()
+        return JsonResponse({"status": "deleted", "id": event_id})
+    except Event.DoesNotExist:
         return HttpResponseNotFound("Event not found")
-    return JsonResponse({"status": "deleted", "id": event_id})
